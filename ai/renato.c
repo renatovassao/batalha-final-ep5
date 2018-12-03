@@ -92,6 +92,14 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     // pega RENATO ROBOT
     Robot *r = &g->map[p.x][p.y].object.robot;
 
+    // se esta tomando tiro, anda para frente
+    int i;
+    for (i = 0; i < 6; i++) {
+        Position q = fakeWalk(p, i);
+        if (valid(q, g->m, g->n, g) && g->map[q.x][q.y].type == PROJECTILE)
+            return WALK;
+    }
+
     // se esta em um obstaculo, anda para a frente ou gira a esquerda
     if (g->map[p.x][p.y].type == BLOCK) {
         if (valid(fakeWalk(p, r->dir), g->m, g->n, g))
@@ -103,8 +111,8 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     // Busca inimigo atras, para deixar obstaculo em cima dele
     if (r->obstacles > 0) {
         Position b_left, b_center, b_right;
-        b_left = getNeighbor(p, (r->dir - 1) % 6);
-        b_center = getNeighbor(p, (r->dir - 2) % 6);
+        b_left = getNeighbor(p, (r->dir - 2) % 6);
+        b_center = getNeighbor(p, (r->dir - 3) % 6);
         b_right = getNeighbor(p, (r->dir - 4) % 6);
 
         if (g->map[b_left.x][b_left.y].type == ROBOT) {
@@ -123,7 +131,7 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
         if (hasEnemyInDir(g, p, (r->dir - 1) % 6)) {
             return SHOOT_LEFT;
         }
-        if (hasEnemyInDir(g, p, r->dir % 6)) {
+        if (hasEnemyInDir(g, p, r->dir)) {
             return SHOOT_CENTER;
         }
         if (hasEnemyInDir(g, p, (r->dir + 1) % 6)) {
@@ -134,11 +142,6 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     // Procura posto de controle
     if (HAS_OUTPOST) {
         if (NEAR_OUT_I == p.x && NEAR_OUT_J == p.y) {
-            if (r->bullets > 10) {
-                if (valid(fakeWalk(p, r->dir), g->m, g->n, g))
-                    return WALK;
-                return TURN_LEFT;
-            }
             return STAND;
         }
 
@@ -152,6 +155,6 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
         }
     }
     
-    // Anda/vira para rota mais proxima para poder atirar no inimigo
+    // Vira para esquerda para ver se na proxima rodada consegue outra acao
     return TURN_LEFT;
 }
