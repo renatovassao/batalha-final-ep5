@@ -37,21 +37,38 @@ Position fakeWalk(Position p, Direction d) {
             p.x--;
             break;
         case TOP_LEFT:
-            p.x--;
-            p.y--;
+            if (p.y % 2 == 0) {
+                p.x--;
+                p.y--;
+            } else
+                p.y--;
             break;
         case TOP_RIGHT:
-            p.y--;
+            if (p.y % 2 == 0) {
+                p.y--;
+            } else {
+                p.x++;
+                p.y--;
+            }
             break;
         case RIGHT:
             p.x++;
             break;
         case BOTTOM_RIGHT:
-            p.y++;
+            if (p.y % 2 == 0)
+                p.y++;
+            else {
+                p.y++;
+                p.y++;
+            }
             break;
         case BOTTOM_LEFT:
-            p.x--;
-            p.y++;
+            if (p.y % 2 == 0) {
+                p.x--;
+                p.y++;
+            } else
+                p.y++;
+            break;
     }
     return p;
 }
@@ -86,9 +103,9 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     // Busca inimigo atras, para deixar obstaculo em cima dele
     if (r->obstacles > 0) {
         Position b_left, b_center, b_right;
-        b_left = getNeighbor(p, r->dir - 2 % 6);
-        b_center = getNeighbor(p, r->dir - 3 % 6);
-        b_right = getNeighbor(p, r->dir - 4 % 6);
+        b_left = getNeighbor(p, (r->dir - 1) % 6);
+        b_center = getNeighbor(p, (r->dir - 2) % 6);
+        b_right = getNeighbor(p, (r->dir - 4) % 6);
 
         if (g->map[b_left.x][b_left.y].type == ROBOT) {
             return OBSTACLE_LEFT;
@@ -103,13 +120,13 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
 
     // Procura inimigo no centro, esquerda e direita, e atira se tiver balas e encontrar algum inimigo
     if (r->bullets > 0) {
-        if (hasEnemyInDir(g, p, r->dir - 1 % 6)) {
+        if (hasEnemyInDir(g, p, (r->dir - 1) % 6)) {
             return SHOOT_LEFT;
         }
         if (hasEnemyInDir(g, p, r->dir % 6)) {
             return SHOOT_CENTER;
         }
-        if (hasEnemyInDir(g, p, r->dir + 1 % 6)) {
+        if (hasEnemyInDir(g, p, (r->dir + 1) % 6)) {
             return SHOOT_RIGHT;
         }
     }
@@ -117,6 +134,11 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     // Procura posto de controle
     if (HAS_OUTPOST) {
         if (NEAR_OUT_I == p.x && NEAR_OUT_J == p.y) {
+            if (r->bullets > 10) {
+                if (valid(fakeWalk(p, r->dir), g->m, g->n, g))
+                    return WALK;
+                return TURN_LEFT;
+            }
             return STAND;
         }
 
@@ -131,5 +153,5 @@ Action processTurn(Grid *g, Position p, int turnsLeft) {
     }
     
     // Anda/vira para rota mais proxima para poder atirar no inimigo
-    return TURN_LEFT;;
+    return TURN_LEFT;
 }
